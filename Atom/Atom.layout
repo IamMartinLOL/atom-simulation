@@ -1,0 +1,72 @@
+[
+    {
+        "caretX": 31,
+        "caretY": 2,
+        "filename": "C:/Users/rodina/Documents/projects/Atom/ToDoo.txt",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 1,
+        "top": 0
+    },
+    {
+        "caretX": 54,
+        "caretY": 16,
+        "filename": "C:/Users/rodina/Documents/projects/Atom/math.h",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 2,
+        "top": 0
+    },
+    {
+        "caretX": 1,
+        "caretY": 13,
+        "filename": "C:/Users/rodina/Documents/projects/Atom/math.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 5,
+        "top": 360
+    },
+    {
+        "caretX": 6,
+        "caretY": 24,
+        "filename": "C:/Users/rodina/Documents/projects/Atom/render.cpp",
+        "focused": true,
+        "isOpen": true,
+        "left": 0,
+        "order": 4,
+        "top": 2700
+    },
+    {
+        "caretX": 7,
+        "caretY": 7,
+        "filename": "C:/Users/rodina/Documents/projects/Atom/render.h",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 0,
+        "top": 0
+    },
+    {
+        "caretX": 25,
+        "caretY": 22,
+        "filename": "C:/Users/rodina/Documents/projects/Atom/Notes.txt",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 3,
+        "top": 0
+    },
+    {
+        "caretX": 2,
+        "caretY": 6,
+        "filename": "C:/Users/rodina/Documents/projects/Atom/main.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 6,
+        "top": 0
+    }
+]
