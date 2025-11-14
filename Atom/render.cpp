@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-
+#include <raylib.h>
 // === Pravděpodobnostní oblak (1s orbital) ===
 
 // Náhodné číslo 0–1
@@ -14,12 +14,73 @@ static inline float rand01() {
 
 const float BOHR = 3.0f; // měřítko 
 const float P1S_MAX = 1.0f / (M_PI * BOHR * BOHR * BOHR); // max hustota pro 1s
+const float P3D_MAX = 0.002f;
+int currentOrbital = 0; // 0=z2, 1=x2-y2, 2=xy, 3=xz, 4=yz
+bool orbitalChanged = false;
+
+void printProgress(int current, int total) {
+	int width = 50; // šířka progress baru
+	float progress = (float)current / (float)total;
+	int pos = (int)(width * progress);
+	
+	std::cout << "[";
+	for (int i = 0; i < width; ++i) {
+		if (i < pos) std::cout << "=";
+		else std::cout << " ";
+	}
+	std::cout << "] " << (int)(progress * 100.0) << "%\r";
+	std::cout.flush();
+}
 
 float probability_1s(float x, float y, float z) {
 	float r = sqrt(x*x + y*y + z*z);
 	float a = BOHR;
 	return (1.0f / (M_PI * a*a*a)) * expf(-2.0f * r / a);
 }
+
+float probability_3d_z2(float x, float y, float z) {
+	float r = sqrtf(x*x + y*y + z*z);
+	float a = BOHR;
+	
+	// Radiální část
+	float R = (r*r*r*r) * expf(-2.0f * r / (3.0f * a)) / (6561.0f * 30.0f * a*a*a*a*a);
+	
+	// Úhlová část
+	float theta = acosf(z / (r + 1e-6f));
+	float phi = atan2f(y, x);
+	float Y;
+	
+	switch(currentOrbital) {
+		case 0: Y = sqrt(5/(16*M_PI)) * (3*cos(theta)*cos(theta)-1); break;           // d_z2
+		case 1: Y = sqrt(15/(16*M_PI)) * sin(theta)*sin(theta)*cos(2*phi); break;     // d_x2−y2
+		case 2: Y = sqrt(15/(16*M_PI)) * sin(theta)*sin(theta)*sin(2*phi); break;     // d_xy
+		case 3: Y = sqrt(15/(4*M_PI))  * sin(theta)*cos(theta)*cos(phi); break;       // d_xz
+		case 4: Y = sqrt(15/(4*M_PI))  * sin(theta)*cos(theta)*sin(phi); break;       // d_yz
+	}
+	
+	return R * Y * Y;
+}
+
+std::vector<glm::vec3> sampleCloud_3d_z2(int N, float Rmax) {
+	std::vector<glm::vec3> out;
+	out.reserve(N);
+	int printed = 0;
+	while ((int)out.size() < N) {
+		float x = (rand01()*2.0f - 1.0f) * Rmax;
+		float y = (rand01()*2.0f - 1.0f) * Rmax;
+		float z = (rand01()*2.0f - 1.0f) * Rmax;
+		float p = probability_3d_z2(x, y, z) / P3D_MAX;
+		if (rand01() < p) out.emplace_back(x, y, z);
+		
+		// Tisk progressu každých 100 bodů
+		if (out.size() % (N/100) == 0) {
+			printProgress((int)out.size(), N);
+		}
+	}
+	std::cout << std::endl;
+	return out;
+}
+
 
 // Náhodné vzorkování podle 1s orbitalu (Monte Carlo rejection)
 std::vector<glm::vec3> sampleCloud_1s(int N, float Rmax) {
@@ -32,7 +93,7 @@ std::vector<glm::vec3> sampleCloud_1s(int N, float Rmax) {
 		if (x*x + y*y + z*z > Rmax*Rmax) continue;
 		float p = probability_1s(x, y, z) / P1S_MAX;
 		if (rand01() < p)
-			out.emplace_back(x, y, z);
+		out.emplace_back(x, y, z);
 	}
 	return out;
 }
@@ -114,17 +175,8 @@ void drawSphere(float radius, int slices, int stacks) {
 	}
 }
 
-// key_callback
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
-	
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { 
-		showProbCloud = !showProbCloud;
-		std::cout << (showProbCloud ? "Zobrazuji pravdepodobnostni oblak\n"
-			: "Zobrazuji obihajici elektrony\n");
-	}
-}
+
+
 
 // Pohyb klávesnice
 void processInput(GLFWwindow* window) {
@@ -136,12 +188,30 @@ void processInput(GLFWwindow* window) {
 		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		cameraSpeed = 0.1f;
 	else
 		cameraSpeed = 0.05f;
 }
-
+// key_callback
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+		showProbCloud = !showProbCloud;
+	
+	if (action == GLFW_PRESS) {
+		switch(key) {
+			case GLFW_KEY_F1: currentOrbital = 0; orbitalChanged = true; break;
+			case GLFW_KEY_F2: currentOrbital = 1; orbitalChanged = true; break;
+			case GLFW_KEY_F3: currentOrbital = 2; orbitalChanged = true; break;
+			case GLFW_KEY_F4: currentOrbital = 3; orbitalChanged = true; break;
+			case GLFW_KEY_F5: currentOrbital = 4; orbitalChanged = true; break;
+		}
+	}
+}
 // Myš
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	if (firstMouse) {
@@ -209,7 +279,8 @@ void renderAtom() {
 	perspectiveGL(60.0, 800.0 / 600.0, 0.1, 100.0);
 	glMatrixMode(GL_MODELVIEW);
 	
-	std::vector<glm::vec3> cloud = sampleCloud_1s(50000, 6.0f * BOHR);
+	//std::vector<glm::vec3> cloud = sampleCloud_1s(10000, 6.0f * BOHR);
+	std::vector<glm::vec3> cloud = sampleCloud_3d_z2(10000, 12.0f * BOHR);
 	
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -283,6 +354,12 @@ void renderAtom() {
 				glPopMatrix();
 			}
 		}
+
+		if (orbitalChanged) {
+			cloud = sampleCloud_3d_z2(10000, 12.0f * BOHR);
+			orbitalChanged = false;
+		}
+		
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
