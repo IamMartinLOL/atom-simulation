@@ -1,0 +1,7 @@
+[DATE] – Added orbital switching using F1–F5 keys
+- Implemented switching between d-orbitals (d_z2, d_x2-y2, d_xy, d_xz, d_yz)
+- Added 'currentOrbital' variable and 'orbitalChanged' flag to track changes
+- Updated probability_3d_z2() function to support all five d-orbitals
+- Added logic in key_callback() to handle orbital switching and set orbitalChanged = true
+- In the main render loop, the electron cloud is re-sampled via sampleCloud_3d_z2() when the orbital changes
+- Result: the probability cloud dynamically updates when pressing F1–F5
