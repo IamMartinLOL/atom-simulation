@@ -29,6 +29,7 @@ The model is **not to scale**, but provides an intuitive visual understanding of
 | **Shift** | Move faster |
 | **Space** | Toggle between orbiting electrons and the probability cloud |
 | **ESC** | Exit the program |
+| **F1-F4** | Change the probability cloud |
 
 ---
 
