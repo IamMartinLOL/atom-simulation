@@ -5,3 +5,7 @@
 - Added logic in key_callback() to handle orbital switching and set orbitalChanged = true
 - In the main render loop, the electron cloud is re-sampled via sampleCloud_3d_z2() when the orbital changes
 - Result: the probability cloud dynamically updates when pressing F1–F5
+
+[06.12 2025] - I modified the visualization of electrons, protons, and neutrons. At the same time, I made the movement of the atomic nucleus more realistic and adjusted the distances to make it as realistic as possible.
+I played around with the electrons a bit, so I apologize for any errors or bugs. 
+I modified the code so that you can set everything yourself (color, number of samples, speed of movement, etc.).
