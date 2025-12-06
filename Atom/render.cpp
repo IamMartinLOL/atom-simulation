@@ -5,7 +5,6 @@
 #include <vector>
 #include <cmath>
 #include <raylib.h>
-// === Pravděpodobnostní oblak (1s orbital) ===
 
 // Náhodné číslo 0–1
 static inline float rand01() {
@@ -18,19 +17,6 @@ const float P3D_MAX = 0.002f;
 int currentOrbital = 0; // 0=z2, 1=x2-y2, 2=xy, 3=xz, 4=yz
 bool orbitalChanged = false;
 
-void printProgress(int current, int total) {
-	int width = 50; // šířka progress baru
-	float progress = (float)current / (float)total;
-	int pos = (int)(width * progress);
-	
-	std::cout << "[";
-	for (int i = 0; i < width; ++i) {
-		if (i < pos) std::cout << "=";
-		else std::cout << " ";
-	}
-	std::cout << "] " << (int)(progress * 100.0) << "%\r";
-	std::cout.flush();
-}
 
 float probability_1s(float x, float y, float z) {
 	float r = sqrt(x*x + y*y + z*z);
@@ -42,7 +28,7 @@ float probability_3d_z2(float x, float y, float z) {
 	float r = sqrtf(x*x + y*y + z*z);
 	float a = BOHR;
 	
-	// Radiální část
+	// Radiální část (přibližná tvarová funkce pro ukázku)
 	float R = (r*r*r*r) * expf(-2.0f * r / (3.0f * a)) / (6561.0f * 30.0f * a*a*a*a*a);
 	
 	// Úhlová část
@@ -51,11 +37,12 @@ float probability_3d_z2(float x, float y, float z) {
 	float Y;
 	
 	switch(currentOrbital) {
-		case 0: Y = sqrt(5/(16*M_PI)) * (3*cos(theta)*cos(theta)-1); break;           // d_z2
-		case 1: Y = sqrt(15/(16*M_PI)) * sin(theta)*sin(theta)*cos(2*phi); break;     // d_x2−y2
-		case 2: Y = sqrt(15/(16*M_PI)) * sin(theta)*sin(theta)*sin(2*phi); break;     // d_xy
-		case 3: Y = sqrt(15/(4*M_PI))  * sin(theta)*cos(theta)*cos(phi); break;       // d_xz
-		case 4: Y = sqrt(15/(4*M_PI))  * sin(theta)*cos(theta)*sin(phi); break;       // d_yz
+		case 0: Y = sqrt(5.0f/(16.0f*(float)M_PI)) * (3.0f*cos(theta)*cos(theta)-1.0f); break;           // d_z2
+		case 1: Y = sqrt(15.0f/(16.0f*(float)M_PI)) * sin(theta)*sin(theta)*cos(2.0f*phi); break;     // d_x2−y2
+		case 2: Y = sqrt(15.0f/(16.0f*(float)M_PI)) * sin(theta)*sin(theta)*sin(2.0f*phi); break;     // d_xy
+		case 3: Y = sqrt(15.0f/(4.0f*(float)M_PI))  * sin(theta)*cos(theta)*cos(phi); break;       // d_xz
+		case 4: Y = sqrt(15.0f/(4.0f*(float)M_PI))  * sin(theta)*cos(theta)*sin(phi); break;       // d_yz
+		default: Y = 0.0f; break;
 	}
 	
 	return R * Y * Y;
@@ -64,20 +51,13 @@ float probability_3d_z2(float x, float y, float z) {
 std::vector<glm::vec3> sampleCloud_3d_z2(int N, float Rmax) {
 	std::vector<glm::vec3> out;
 	out.reserve(N);
-	int printed = 0;
 	while ((int)out.size() < N) {
 		float x = (rand01()*2.0f - 1.0f) * Rmax;
 		float y = (rand01()*2.0f - 1.0f) * Rmax;
 		float z = (rand01()*2.0f - 1.0f) * Rmax;
 		float p = probability_3d_z2(x, y, z) / P3D_MAX;
 		if (rand01() < p) out.emplace_back(x, y, z);
-		
-		// Tisk progressu každých 100 bodů
-		if (out.size() % (N/100) == 0) {
-			printProgress((int)out.size(), N);
-		}
 	}
-	std::cout << std::endl;
 	return out;
 }
 
@@ -93,7 +73,7 @@ std::vector<glm::vec3> sampleCloud_1s(int N, float Rmax) {
 		if (x*x + y*y + z*z > Rmax*Rmax) continue;
 		float p = probability_1s(x, y, z) / P1S_MAX;
 		if (rand01() < p)
-		out.emplace_back(x, y, z);
+			out.emplace_back(x, y, z);
 	}
 	return out;
 }
@@ -101,7 +81,7 @@ std::vector<glm::vec3> sampleCloud_1s(int N, float Rmax) {
 bool showProbCloud = false;
 
 // Pohyb kamery WASD
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f, 15.0f);
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f, 40.0f); // posunuta dál, ať vidíme větší oblak
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -111,8 +91,9 @@ float pitch = 0.0f;
 float lastX = 400, lastY = 300;
 bool firstMouse = true;
 
+// Realističtější orbit radius (vizuální kompromis)
 float electronAngularSpeed = 1.0f;
-float defaultOrbitRadius = 6.0f;
+float defaultOrbitRadius = 30.0f; // větší, aby elektron byl daleko od jádra
 
 // Callback pro změnu velikosti okna
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -175,8 +156,15 @@ void drawSphere(float radius, int slices, int stacks) {
 	}
 }
 
-
-
+// Jemné vibrace jádra (malý rozsah)
+glm::vec3 vibrateNucleus(const glm::vec3 &p, float t) {
+	float s = 0.02f; // velmi malá amplituda vibrací
+	return p + glm::vec3(
+		sinf(t * 6.3f + p.x * 12.1f) * s,
+		sinf(t * 7.1f + p.y * 9.7f) * s,
+		sinf(t * 5.5f + p.z * 11.3f) * s
+		);
+}
 
 // Pohyb klávesnice
 void processInput(GLFWwindow* window) {
@@ -242,7 +230,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	cameraFront = glm::normalize(front);
 }
 
-// Vibrační posuny
+
 glm::vec3 getParticlePosition(float baseX, float baseY, float baseZ, float time) {
 	float offsetX = 0.15f * sin(time * 0.5f + baseX);
 	float offsetY = 0.15f * cos(time * 0.5f + baseY);
@@ -250,14 +238,14 @@ glm::vec3 getParticlePosition(float baseX, float baseY, float baseZ, float time)
 	return glm::vec3(baseX + offsetX, baseY + offsetY, baseZ + offsetZ);
 }
 
-// === Hlavní render ===
+
 void renderAtom() {
 	if (!glfwInit()) {
 		std::cout << "GLFW init failed\n";
 		return;
 	}
 	
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Atom", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1280, 800, "Atom", NULL, NULL);
 	if (!window) {
 		std::cout << "Window creation failed!\n";
 		glfwTerminate();
@@ -276,11 +264,20 @@ void renderAtom() {
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	perspectiveGL(60.0, 800.0 / 600.0, 0.1, 100.0);
+	perspectiveGL(60.0, 1280.0 / 800.0, 0.1, 1000.0);
 	glMatrixMode(GL_MODELVIEW);
 	
-	//std::vector<glm::vec3> cloud = sampleCloud_1s(10000, 6.0f * BOHR);
-	std::vector<glm::vec3> cloud = sampleCloud_3d_z2(10000, 12.0f * BOHR);
+	
+	std::vector<glm::vec3> cloud = sampleCloud_3d_z2(50000, 12.0f * BOHR); 
+	
+	
+	std::vector<glm::vec3> nucleusPositions;
+	nucleusPositions.push_back(glm::vec3(-0.08f,  0.04f, 0.0f)); // nukleon 1
+	nucleusPositions.push_back(glm::vec3( 0.10f,  0.03f, 0.0f)); // nukleon 2
+	nucleusPositions.push_back(glm::vec3(-0.05f, -0.09f, 0.01f)); // nukleon 3
+	nucleusPositions.push_back(glm::vec3( 0.07f, -0.06f, -0.02f)); // nukleon 4
+	
+	float nucleusScale = 0.08f; 
 	
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -300,66 +297,61 @@ void renderAtom() {
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 			glPointSize(2.0f);
 			glBegin(GL_POINTS);
-			glColor4f(0.3f, 0.6f, 1.0f, 0.15f);
-			for (auto &p : cloud)
+			for (auto &p : cloud) {
+				// lepší alfa podle lokální hustoty (popř. používej konstantu)
+				float prob = probability_3d_z2(p.x, p.y, p.z);
+				float a = glm::clamp(prob / P3D_MAX, 0.0f, 1.0f) * 0.12f; // tweak alfa
+				glColor4f(0.2f, 0.4f, 1.0f, 0.4f);
 				glVertex3f(p.x, p.y, p.z);
+			}
 			glEnd();
 			glDisable(GL_BLEND);
 		}
 		
-		// === Jádro ===
-		std::vector<glm::vec3> positions;
-		positions.push_back(getParticlePosition(-0.75f, 0.0f, 0.0f, time)); 
-		positions.push_back(getParticlePosition(0.03f, 1.5f, 0.0f, time)); 
-		positions.push_back(getParticlePosition(0.75f, 0.0f, 0.0f, time)); 
-		positions.push_back(getParticlePosition(0.03f, -1.5f, 0.0f, time));
+	
+		glEnable(GL_DEPTH_TEST);
+		for (auto p : nucleusPositions) {
+			glm::vec3 pp = vibrateNucleus(p, time);
+			int idx = &p - &nucleusPositions[0]; 
+		}
+	
+		for (size_t i = 0; i < nucleusPositions.size(); ++i) {
+			glm::vec3 p = vibrateNucleus(nucleusPositions[i], time);
+			if (i % 2 == 0) glColor3f(1.0f, 0.2f, 0.2f); // proton (červenější)
+			else glColor3f(0.9f, 0.9f, 0.95f); // neutron (světle šedá)
+			
+			glPushMatrix();
+			glTranslatef(p.x, p.y, p.z);
+			drawSphere(nucleusScale, 32, 16);
+			glPopMatrix();
+		}
 		
+	
 		float orbitRadius = defaultOrbitRadius;
 		float angle = time * electronAngularSpeed;
+		
 		glm::vec3 electron1 = glm::vec3(cos(angle) * orbitRadius, 0.0f, sin(angle) * orbitRadius);
 		glm::vec3 electron2 = glm::vec3(cos(angle + glm::pi<float>()) * orbitRadius, 0.0f, sin(angle + glm::pi<float>()) * orbitRadius);
-		positions.push_back(electron1);
-		positions.push_back(electron2);
 		
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE); 
-		
-		// Protony
-		glColor3f(1.0f, 0.0f, 0.0f);
-		for (int i = 0; i < 2; ++i) {
-			glPushMatrix();
-			glTranslatef(positions[i].x, positions[i].y, positions[i].z);
-			drawSphere(0.15f, 32, 16);
-			glPopMatrix();
-		}
-		
-		// Neutrony
-		glColor3f(1.0f, 1.0f, 1.0f);
-		for (int i = 2; i < 4; ++i) {
-			glPushMatrix();
-			glTranslatef(positions[i].x, positions[i].y, positions[i].z);
-			drawSphere(0.15f, 32, 16);
-			glPopMatrix();
-		}
-		
-		// Elektrony
 		if (!showProbCloud) {
-			for (int i = 4; i < 6; ++i) {
+			
+			for (int i = 0; i < 2; ++i) {
+				glm::vec3 epos = (i == 0) ? electron1 : electron2;
 				glPushMatrix();
-				glTranslatef(positions[i].x, positions[i].y, positions[i].z);
-				glColor4f(0.2f, 0.6f, 1.0f, 0.8f);
-				drawSphere(0.1f, 32, 16);
-				glColor4f(0.3f, 0.6f, 1.0f, 0.3f);
-				drawSphere(0.3f, 32, 16);
+				glTranslatef(epos.x, epos.y, epos.z);
+				glColor4f(0.2f, 0.6f, 1.0f, 0.9f);
+				drawSphere(0.08f, 24, 12); 
+				glColor4f(0.25f, 0.6f, 1.0f, 0.35f);
+				drawSphere(0.28f, 24, 12); // aura
 				glPopMatrix();
 			}
 		}
-
+		
+		
 		if (orbitalChanged) {
-			cloud = sampleCloud_3d_z2(10000, 12.0f * BOHR);
+			cloud = sampleCloud_3d_z2(12000, 12.0f * BOHR);
 			orbitalChanged = false;
 		}
-		
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
