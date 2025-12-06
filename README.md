@@ -7,6 +7,7 @@ An OpenGL simulation of an atom showing **orbiting electrons** or a **quantum pr
 ## 🎨 Preview
 <img width="434" height="253" alt="Snímek obrazovky 2025-10-12 175146" src="https://github.com/user-attachments/assets/45535736-813c-45e9-9c77-a174f44cc360" />
 <img width="1282" height="793" alt="obrazek" src="https://github.com/user-attachments/assets/e59e3592-a814-42d7-a5e4-2255ec053ee4" />
+Probability cloud with keybord F2
 
 ---
 
