@@ -1,65 +1,176 @@
-# 🧬 Atom Visualizer
+# 🧬 Atomic Orbital Visualizer
 
-An OpenGL simulation of an atom showing **orbiting electrons** or a **quantum probability cloud** based on the **1s orbital wave function (|ψ|²)**.
-
----
-
-## 🎨 Preview
-<img width="434" height="253" alt="Snímek obrazovky 2025-10-12 175146" src="https://github.com/user-attachments/assets/45535736-813c-45e9-9c77-a174f44cc360" />
-<img width="1282" height="793" alt="obrazek" src="https://github.com/user-attachments/assets/e59e3592-a814-42d7-a5e4-2255ec053ee4" />
-Probability cloud with keybord F2
+A real-time **OpenGL simulation** of atomic orbitals based on **quantum mechanical probability densities**.  
+Supports multiple electron orbital shapes (1s, 2p, 3d…) using **Monte Carlo sampling** of the wave function $$\(|\psi(\mathbf{r})|^{2}\)$$.
 
 ---
 
-## ⚙️ Description
-This project visualizes:
-- **Protons and neutrons** forming a vibrating atomic nucleus  
-- **Electrons** that can either orbit the nucleus or appear as a **quantum probability cloud**  
-- **Monte Carlo sampling** to generate realistic electron density distributions based on the hydrogen 1s orbital  
+## 📸 Visualization Examples
 
-The model is **not to scale**, but provides an intuitive visual understanding of atomic structure.
+<img width="420" src="https://github.com/user-attachments/assets/45535736-813c-45e9-9c77-a174f44cc360" />
+<img width="700" src="https://github.com/user-attachments/assets/e59e3592-a814-42d7-a5e4-2255ec053ee4" />
 
 ---
 
-## 🎮 Controls
+# ⚙️ Description
+
+This program renders:
+
+---
+
+### 🧪 **Quantum Probability Clouds**
+
+Generated using the probability density:
+
+$$
+P(\mathbf{r}) = |\psi(\mathbf{r})|^2
+$$
+
+Different orbitals are sampled depending on the selected mode (F1–F4).
+
+---
+
+### ⚛️ **Atomic Nucleus**
+
+A vibrating cluster of  
+- **protons (red)**  
+- **neutrons (gray)**  
+
+providing a stylized representation of nuclear structure.
+
+---
+
+### 🌀 **Electrons**
+
+Two visualization modes:
+- classical moving spheres (Bohr-like model)  
+- quantum probability cloud with tens of thousands of Monte-Carlo samples  
+
+---
+
+### 🎲 **Monte Carlo Sampling**
+
+Electron distributions are produced using rejection or importance sampling for:
+
+$$
+P(r) \propto e^{-2r/a}
+$$
+
+and for higher orbitals:
+
+$$
+P(r,\theta,\phi) = |\psi_{nlm}(r,\theta,\phi)|^2
+$$
+
+---
+
+# 🧮 Quantum Mechanics Behind the Simulation
+
+---
+
+## ⭐ 1s Orbital
+
+Radial probability density:
+
+$$
+P_{1s}(r) = \frac{1}{\pi a^3} e^{-2r/a}
+$$
+
+Wave function:
+
+$$
+\psi_{1s}(r) = \frac{1}{\sqrt{\pi a^3}} e^{-r/a}
+$$
+
+Visual: **spherical cloud**, maximal density at nucleus.
+
+---
+
+## 🔷 2p Orbital
+$$
+\[
+\psi_{2p}(r,\theta) =
+\frac{1}{4\sqrt{2\pi a^3}}
+\left(\frac{r}{a}\right)e^{-r/2a}\cos\theta
+\]
+$$
+
+$$
+\[
+P_{2p}(r,\theta) = |\psi_{2p}|^2
+\]
+$$
+
+Visual:  
+- **two lobes**  
+- **one angular node**
+
+---
+
+## 🔶 3d Orbital (example: $$\( d_{z^2} \)$$)
+
+$$
+\psi_{3d}(r,\theta) =
+\frac{1}{81\sqrt{6\pi a^3}}
+\left(\frac{r}{a}\right)^2
+e^{-r/3a}\left(3\cos^2\theta - 1\right)
+$$
+
+Creates a **toroidal ring + two axial lobes**.
+
+---
+
+# 🎮 Controls
+
 | Key | Action |
-|:---:|:--------|
-| **W / A / S / D** | Move the camera |
-| **Mouse** | Rotate the view |
+|-----|--------|
+| **W / A / S / D** | Move camera |
+| **Mouse** | Rotate camera |
 | **Shift** | Move faster |
-| **Space** | Toggle between orbiting electrons and the probability cloud |
-| **ESC** | Exit the program |
-| **F1-F4** | Change the probability cloud |
+| **Space** | Toggle electrons / cloud |
+| **F1** | 1s orbital |
+| **F2** | 2p orbital |
+| **F3** | 3d orbital |
+| **F4** | Additional orbital |
+| **ESC** | Exit |
 
 ---
 
-## 🧰 Requirements
-- [GLFW](https://www.glfw.org/)
-- [GLM](https://github.com/g-truc/glm)
-- OpenGL 3.3+
+# 🧰 Requirements
+
+- **OpenGL 3.3+**  
+- **GLFW**  
+- **GLM**  
+- **C++17 compiler**
 
 ---
 
-## 🧩 Building
+# 🧩 Build Instructions
 
-### 🐧 Linux / macOS
+## 🐧 Linux / macOS
+
 ```bash
 g++ src/main.cpp -lglfw -lGL -ldl -lX11 -lpthread -o atom
 ./atom
 ```
-## 🔬 How it works
 
-The probability density for the 1s orbital is given by:
+## 🪟 Windows (MinGW)
 
-$$
-P(r) = \frac{1}{\pi a^3} e^{-2r/a}
-$$
+```bash
+g++ src/main.cpp -Iinclude -Llib -lglfw3 -lopengl32 -lgdi32 -o atom.exe
+atom.exe
+```
 
-where  
-- \( a \) — Bohr radius  
-- \( r \) — distance from the nucleus  
-Points in the cloud are generated using Monte Carlo rejection sampling, where denser regions correspond to a higher probability of finding an electron.
+---
 
-You can adjust the number of samples for quality/performance balance:
+# 🔬 Cloud Density Settings
 
-```sampleCloud_1s(50000, 6.0f * BOHR);```
+Set cloud resolution:
+
+```cpp
+sampleCloud_1s(50000, 6.0f * BOHR);
+```
+
+Higher number = smoother cloud, heavier GPU load.
+
+---
