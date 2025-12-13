@@ -47,7 +47,7 @@ $p_z: \quad \cos\theta$
 
 Monte Carlo sampling:
 
-$ \text{accept if } P(\mathbf{r},t) / P_{\max} > \text{rand}(0,1)$
+$\text{accept if } P(\mathbf{r},t) / P_{\max} > \text{rand}(0,1)$
 Mathematical Background
 
 ### Time-Dependent Schrödinger Equation
