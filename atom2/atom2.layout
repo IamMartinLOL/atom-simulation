@@ -1,0 +1,31 @@
+[
+    {
+        "caretX": 19,
+        "caretY": 4,
+        "filename": "C:/Users/rodina/Documents/projects/atom2/render.h",
+        "focused": false,
+        "isOpen": false,
+        "left": 0,
+        "top": 0
+    },
+    {
+        "caretX": 15,
+        "caretY": 4,
+        "filename": "C:/Users/rodina/Documents/projects/atom2/main.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 0,
+        "top": 0
+    },
+    {
+        "caretX": 1,
+        "caretY": 443,
+        "filename": "C:/Users/rodina/Documents/projects/atom2/render.cpp",
+        "focused": true,
+        "isOpen": true,
+        "left": 0,
+        "order": 1,
+        "top": 11250
+    }
+]

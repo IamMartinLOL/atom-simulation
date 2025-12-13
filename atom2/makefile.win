@@ -1,0 +1,40 @@
+# Project: atom2
+# Makefile created by Red Panda C++ 3.2.2958
+
+CXX      = "g++.exe"
+CC       = "gcc.exe"
+WINDRES  = "windres.exe"
+RM       = del /q /f
+CD       = cd /d
+LIBS     = "-LD:/Programy/RedPanda-Cpp/SDL3-3.2.20/x86_64-w64-mingw32/lib" "-Wl,--stack,12582912" "-s" "-lraylib" "-lopengl32" "-lgdi32" "-lwinmm" "-static"
+INCS     = "-ID:/Programy/RedPanda-Cpp/SDL3-3.2.20/x86_64-w64-mingw32/include" "-ID:/Programy/RedPanda-Cpp/MinGW64/x86_64-w64-mingw32/include/openssl-3.6.0/include"
+CXXINCS  = "-ID:/Programy/RedPanda-Cpp/SDL3-3.2.20/x86_64-w64-mingw32/include"
+CXXFLAGS = $(CXXINCS) "-O2" "-pipe"
+CFLAGS   = $(INCS) "-O2" "-pipe"
+WINDRESFLAGS = 
+RES      = atom2_private.res
+OBJ      = render.o main.o $(RES)
+BIN      = atom2.exe
+LINKOBJ  = "render.o" "main.o" "atom2_private.res"
+CLEANOBJ = "render.o" "main.o" "atom2_private.res" "atom2.exe"
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	-$(RM) $(CLEANOBJ) >NUL 2>&1
+
+atom2.exe: $(OBJ)
+
+	$(CXX) $(LINKOBJ) -o "atom2.exe" $(LIBS)
+
+render.o: render.cpp
+	$(CXX) -c "render.cpp" -o "render.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=windows-1250
+
+main.o: main.cpp render.h
+	$(CXX) -c "main.cpp" -o "main.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=windows-1250
+
+atom2_private.res: atom2_private.rc 
+	$(WINDRES) -i "atom2_private.rc" --input-format=rc -o "atom2_private.res" -O coff $(WINDRESFLAGS) 
+
