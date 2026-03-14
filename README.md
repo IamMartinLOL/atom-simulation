@@ -24,7 +24,7 @@ where the wave function evolves according to the **time-dependent Schrödinger e
 <img width="420" src="https://github.com/user-attachments/assets/45535736-813c-45e9-9c77-a174f44cc360" />
 
 ## ATOM 1 (Probability c.)
-<img width="700" src="" />
+<img width="700" src="atom1.png" />
 
 ## ATOM 2 (Wave func. phase)
 <img width="878" src="https://github.com/user-attachments/assets/cf8084f9-e6e4-46a1-bbb0-575024448d3a" />
