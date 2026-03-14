@@ -1,14 +1,16 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/constants.hpp> 	
+#include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <raylib.h>
-
+#include <random>	
 // Náhodné číslo 0–1
-static inline float rand01() {
-	return (float)rand() / (float)RAND_MAX;
+std::mt19937 rng(std::random_device{}());
+std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+float rand01() {
+	return dist(rng);
 }
 
 const float BOHR = 3.0f; // měřítko 
@@ -17,6 +19,9 @@ const float P3D_MAX = 0.002f;
 int currentOrbital = 0; // 0=z2, 1=x2-y2, 2=xy, 3=xz, 4=yz
 bool orbitalChanged = false;
 
+// GPU buffer pro částice (probability cloud)
+GLuint cloudVBO = 0;
+size_t cloudSize = 0;
 
 float probability_1s(float x, float y, float z) {
 	float r = sqrt(x*x + y*y + z*z);
@@ -178,7 +183,7 @@ void processInput(GLFWwindow* window) {
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		cameraSpeed = 0.1f;
+		cameraSpeed = 0.3f;
 	else
 		cameraSpeed = 0.05f;
 }
@@ -268,9 +273,8 @@ void renderAtom() {
 	glMatrixMode(GL_MODELVIEW);
 	
 	
-	std::vector<glm::vec3> cloud = sampleCloud_3d_z2(50000, 12.0f * BOHR); 
-	
-	
+	std::vector<glm::vec3> cloud = sampleCloud_3d_z2(120000, 12.0f * BOHR); 
+
 	std::vector<glm::vec3> nucleusPositions;
 	nucleusPositions.push_back(glm::vec3(-0.08f,  0.04f, 0.0f)); // nukleon 1
 	nucleusPositions.push_back(glm::vec3( 0.10f,  0.03f, 0.0f)); // nukleon 2
@@ -291,42 +295,78 @@ void renderAtom() {
 			center.x, center.y, center.z,
 			cameraUp.x, cameraUp.y, cameraUp.z);
 		
-		// === Oblak ===
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		
+		glDisable(GL_DEPTH_TEST);
+		
+		glPointSize(6.0f);
+		
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), (void*)0);
+		
+		glDrawArrays(GL_POINTS, 0, cloudSize);
+		
+		glDisableClientState(GL_VERTEX_ARRAY);
+		
+		glEnable(GL_DEPTH_TEST);
+		// === Density rendered probability cloud ===
 		if (showProbCloud) {
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			glPointSize(2.0f);
-			glBegin(GL_POINTS);
-			for (auto &p : cloud) {
-				// lepší alfa podle lokální hustoty (popř. používej konstantu)
-				float prob = probability_3d_z2(p.x, p.y, p.z);
-				float a = glm::clamp(prob / P3D_MAX, 0.0f, 1.0f) * 0.12f; // tweak alfa
-				glColor4f(0.2f, 0.4f, 1.0f, 0.4f);
-				glVertex3f(p.x, p.y, p.z);
-			}
-			glEnd();
-			glDisable(GL_BLEND);
+		
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);   // additive blending (density look)
+		
+		glDisable(GL_DEPTH_TEST);            // důležité pro additive blending
+		glEnable(GL_POINT_SMOOTH);           // kulaté body
+		glPointSize(6.0f);                   // větší body = plynulejší oblak
+		
+		glBegin(GL_POINTS);
+		
+		for (auto &p : cloud) {
+		
+		float prob = probability_3d_z2(p.x, p.y, p.z);
+		
+		// normalizace hustoty
+		float density = glm::clamp(prob / P3D_MAX, 0.0f, 1.0f);
+		
+		// alfa podle hustoty
+		//float alpha = density * 0.15f;
+		float alpha = 0.08f + density * 0.35f;
+		// jemný barevný gradient podle hustoty
+		float r = 0.2f + density * 0.3f;
+		float g = 0.4f + density * 0.3f;
+		float b = 1.0f;
+		
+		glColor4f(r, g, b, alpha);
+		glm::vec3 pp = getParticlePosition(p.x, p.y, p.z, time);
+		glVertex3f(pp.x, pp.y, pp.z);
+		//glVertex3f(p.x, p.y, p.z);
 		}
 		
-	
+		glEnd();
+		
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+		}
+		
 		glEnable(GL_DEPTH_TEST);
 		for (auto p : nucleusPositions) {
 			glm::vec3 pp = vibrateNucleus(p, time);
 			int idx = &p - &nucleusPositions[0]; 
 		}
-	
+		
 		for (size_t i = 0; i < nucleusPositions.size(); ++i) {
 			glm::vec3 p = vibrateNucleus(nucleusPositions[i], time);
 			if (i % 2 == 0) glColor3f(1.0f, 0.2f, 0.2f); // proton (červenější)
 			else glColor3f(0.9f, 0.9f, 0.95f); // neutron (světle šedá)
 			
-			glPushMatrix();
 			glTranslatef(p.x, p.y, p.z);
+			glPushMatrix();
 			drawSphere(nucleusScale, 32, 16);
 			glPopMatrix();
 		}
 		
-	
+		
 		float orbitRadius = defaultOrbitRadius;
 		float angle = time * electronAngularSpeed;
 		
@@ -349,7 +389,7 @@ void renderAtom() {
 		
 		
 		if (orbitalChanged) {
-			cloud = sampleCloud_3d_z2(12000, 12.0f * BOHR);
+			cloud = sampleCloud_3d_z2(50000, 12.0f * BOHR);
 			orbitalChanged = false;
 		}
 		

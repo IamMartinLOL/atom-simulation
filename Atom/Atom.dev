@@ -44,11 +44,11 @@ UseUTF8 = 1
 
 
 [Unit1]
-FileName = ToDoo.txt
+FileName = render.cpp
 CompileCpp = 1
-Folder = Others
-Compile = 0
-Link = 0
+Folder = Sources
+Compile = 1
+Link = 1
 Priority = 1000
 OverrideBuildCmd = 0
 BuildCmd = 
@@ -77,19 +77,6 @@ SyncProduct = 1
 
 
 [Unit2]
-FileName = math.h
-CompileCpp = 0
-Folder = Headers
-Compile = 0
-Link = 0
-Priority = 1000
-OverrideBuildCmd = 0
-BuildCmd = 
-FileEncoding = PROJECT
-RealEncoding = UTF-8
-
-
-[Unit3]
 FileName = math.cpp
 CompileCpp = 1
 Folder = Sources
@@ -102,21 +89,8 @@ FileEncoding = PROJECT
 RealEncoding = UTF-8
 
 
-[Unit4]
-FileName = render.cpp
-CompileCpp = 1
-Folder = Sources
-Compile = 1
-Link = 1
-Priority = 1000
-OverrideBuildCmd = 0
-BuildCmd = 
-FileEncoding = PROJECT
-RealEncoding = UTF-8
-
-
-[Unit5]
-FileName = render.h
+[Unit3]
+FileName = math.h
 CompileCpp = 0
 Folder = Headers
 Compile = 0
@@ -128,8 +102,21 @@ FileEncoding = PROJECT
 RealEncoding = UTF-8
 
 
-[Unit6]
+[Unit4]
 FileName = Notes.txt
+CompileCpp = 0
+Folder = Others
+Compile = 0
+Link = 0
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+FileEncoding = PROJECT
+RealEncoding = UTF-8
+
+
+[Unit5]
+FileName = ToDoo.txt
 CompileCpp = 1
 Folder = Others
 Compile = 0
@@ -141,7 +128,7 @@ FileEncoding = PROJECT
 RealEncoding = UTF-8
 
 
-[Unit7]
+[Unit6]
 FileName = main.cpp
 CompileCpp = 1
 Folder = Sources
@@ -154,8 +141,34 @@ FileEncoding = PROJECT
 RealEncoding = UTF-8
 
 
+[Unit7]
+FileName = render.h
+CompileCpp = 0
+Folder = Headers
+Compile = 0
+Link = 0
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+FileEncoding = PROJECT
+RealEncoding = UTF-8
+
+
 [Unit8]
-FileName = renderOrbit.cpp
+FileName = render.h
+CompileCpp = 0
+Folder = Headers
+Compile = 0
+Link = 0
+Priority = 1000
+OverrideBuildCmd = 0
+BuildCmd = 
+FileEncoding = PROJECT
+RealEncoding = UTF-8
+
+
+[Unit9]
+FileName = main.cpp
 CompileCpp = 1
 Folder = Sources
 Compile = 1
@@ -164,7 +177,7 @@ Priority = 1000
 OverrideBuildCmd = 0
 BuildCmd = 
 FileEncoding = PROJECT
-RealEncoding = 
+RealEncoding = UTF-8
 
 
 [CompilerSettings]

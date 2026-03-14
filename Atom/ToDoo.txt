@@ -1,0 +1,5 @@
+	-----------------------
+	[*] Udělat osu a opsat funkci
+	[*] udělat nabídku co chci zobrazit
+
+

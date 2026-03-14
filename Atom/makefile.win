@@ -7,16 +7,16 @@ WINDRES  = "windres.exe"
 RM       = del /q /f
 CD       = cd /d
 LIBS     = "-LD:/Programy/RedPanda-Cpp/SDL3-3.2.20/x86_64-w64-mingw32/lib" "-Wl,--stack,12582912" "-s" "-lraylib" "-lopengl32" "-lgdi32" "-lwinmm" "-static"
-INCS     = "-ID:/Programy/RedPanda-Cpp/SDL3-3.2.20/x86_64-w64-mingw32/include"
-CXXINCS  = "-ID:/Programy/RedPanda-Cpp/SDL3-3.2.20/x86_64-w64-mingw32/include"
+INCS     = "-ID:/Programy/RedPanda-Cpp/SDL3-3.2.20/x86_64-w64-mingw32/include" "-ID:/Programy/RedPanda-Cpp/MinGW64/x86_64-w64-mingw32/include/openssl-3.6.0/include" "-IC:/Users/rodina/Downloads/glad"
+CXXINCS  = "-ID:/Programy/RedPanda-Cpp/SDL3-3.2.20/x86_64-w64-mingw32/include" "-IC:/Users/rodina/Downloads/glad"
 CXXFLAGS = $(CXXINCS) "-O2" "-pipe"
 CFLAGS   = $(INCS) "-O2" "-pipe"
 WINDRESFLAGS = 
 RES      = Atom_private.res
-OBJ      = math.o main.o render.o $(RES)
+OBJ      = render.o math.o main.o $(RES)
 BIN      = Atom.exe
-LINKOBJ  = "math.o" "main.o" "render.o" "Atom_private.res"
-CLEANOBJ = "math.o" "main.o" "render.o" "Atom_private.res" "Atom.exe"
+LINKOBJ  = "render.o" "math.o" "main.o" "Atom_private.res"
+CLEANOBJ = "render.o" "math.o" "main.o" "Atom_private.res" "Atom.exe"
 
 .PHONY: all all-before all-after clean clean-custom
 
@@ -29,14 +29,14 @@ Atom.exe: $(OBJ)
 
 	$(CXX) $(LINKOBJ) -o "Atom.exe" $(LIBS)
 
+render.o: render.cpp
+	$(CXX) -c "render.cpp" -o "render.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=windows-1250
+
 math.o: math.cpp math.h
 	$(CXX) -c "math.cpp" -o "math.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=windows-1250
 
-main.o: main.cpp render.h math.h
+main.o: main.cpp math.h render.h
 	$(CXX) -c "main.cpp" -o "main.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=windows-1250
-
-render.o: render.cpp
-	$(CXX) -c "render.cpp" -o "render.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=windows-1250
 
 Atom_private.res: Atom_private.rc 
 	$(WINDRES) -i "Atom_private.rc" --input-format=rc -o "Atom_private.res" -O coff $(WINDRESFLAGS) 
